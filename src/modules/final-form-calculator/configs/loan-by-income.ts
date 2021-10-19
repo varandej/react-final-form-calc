@@ -1,8 +1,14 @@
 import { Checkbox, Dropdown } from 'semantic-ui-react';
+import { DAYS_IN_YEAR } from '../../../lib/common';
 import {
   TFinalFormCalculatorFieldsConfigItem, TValidationConfig,
 } from '../final-form-calculator-types';
-import { EFinalFormCalculatorFields as FNames, EPayemntType } from '../final-form-calculator-enums';
+import {
+  EFinalFormAdditionalCalculatorFields as ANames,
+  EFinalFormProductFields as PNames,
+  EFinalFormCalculatorFields as FNames,
+  EPayemntType,
+} from '../final-form-calculator-enums';
 import { PAYMENT_TYPE_DROPDOWN_OPTION_LIST } from '../final-form-calculator-constants';
 import { FinalFormCalculatorReadonlyValuePresenter as ReadOnly } from '../components';
 import { percentsFormatter, toIntFormatter } from '../final-form-calculator-utils';
@@ -13,95 +19,88 @@ import { percentsFormatter, toIntFormatter } from '../final-form-calculator-util
 export const LOAN_BY_INCOME_FIELDS_CONFIG: TFinalFormCalculatorFieldsConfigItem[] = [
   {
     format: toIntFormatter,
-    hidden: false,
-    label: 'Ежемесячный платеж',
-    name: FNames.MonthlyPayment,
-    required: true,
-    width: 5,
+    label: 'Среднемесячный доход',
+    name: FNames.AverageIncome,
+    width: 6,
   },
   {
     format: toIntFormatter,
-    hidden: false,
-    label: 'Срок кредита',
-    name: FNames.TermInMonths,
-    required: true,
-    width: 5,
+    label: '% На погашение',
+    name: FNames.RepaymentPercentage,
+    width: 4,
   },
   {
     control: ReadOnly,
     format: percentsFormatter,
-    hidden: false,
     label: 'Ставка',
     name: FNames.Rate,
-    required: false,
     width: 6,
   },
   {
     control: Dropdown,
     fluid: true,
-    hidden: false,
     label: 'Тип платежа',
     name: FNames.PaymentType,
     options: PAYMENT_TYPE_DROPDOWN_OPTION_LIST,
-    required: true,
     selection: true,
-    width: 10,
+    width: 6,
+  },
+  {
+    format: toIntFormatter,
+    label: 'Срок кредита (мес.)',
+    name: FNames.TermInMonths,
+    width: 4,
   },
   {
     control: ReadOnly,
     format: toIntFormatter,
-    hidden: false,
-    label: 'Сумма кредита',
-    name: FNames.Amount,
-    required: false,
+    label: 'Ежемесячный платеж',
+    name: FNames.MonthlyPayment,
     width: 6,
   },
   {
     control: Checkbox,
-    hidden: false,
+    label: 'Страховка от банка',
+    name: FNames.IsInsuredInBank,
+    slider: true,
+    width: 6,
+  },
+  {
+    control: Checkbox,
     label: 'ЗП клиент',
     name: FNames.IsSalary,
-    required: false,
     slider: true,
     width: 4,
   },
   {
-    control: Checkbox,
-    hidden: false,
-    label: 'Страховка от банка',
-    name: FNames.IsInsuredInBank,
-    required: false,
-    slider: true,
-    width: 6,
-  },
-  {
     control: ReadOnly,
     format: toIntFormatter,
-    hidden: false,
     label: 'Переплата',
     name: FNames.Overpayment,
-    required: false,
     width: 6,
   },
   {
     control: ReadOnly,
     fluid: true,
-    hidden: false,
     label: 'Продукт',
     name: FNames.Product,
     options: PAYMENT_TYPE_DROPDOWN_OPTION_LIST,
     propName: 'name',
-    required: true,
     selection: true,
-    width: 10,
+    width: 6,
   },
   {
     control: ReadOnly,
     format: toIntFormatter,
-    hidden: false,
+    label: 'Сумма кредита',
+    name: FNames.Amount,
+    width: 4,
+  },
+  {
+    control: ReadOnly,
+    format: toIntFormatter,
     label: 'Всего выплат',
     name: FNames.TotalAmount,
-    required: false,
     width: 6,
   },
 ];
@@ -110,15 +109,9 @@ export const LOAN_BY_INCOME_FIELDS_CONFIG: TFinalFormCalculatorFieldsConfigItem[
  * Конфиг валидации значений калькулятора
  */
 export const LOAN_BY_INCOME_VALIDATION_CONFIG: TValidationConfig = {
-  [FNames.Amount]: [
-    {
-      error: 'Некорректная сумма кредита',
-      expression: `${FNames.Amount} > 60000000 or ${FNames.Amount} < 100000`,
-    },
-  ],
   [FNames.TermInMonths]: [
     {
-      error: 'Некорректная срок кредита',
+      error: 'Некорректныя срок кредита',
       expression: `${FNames.TermInMonths} > 266 or ${FNames.TermInMonths} < 2`,
     },
   ],
@@ -128,9 +121,22 @@ export const LOAN_BY_INCOME_VALIDATION_CONFIG: TValidationConfig = {
  * Конфиг начальных значений калькулятора
  */
 export const LOAN_BY_INCOME_INITIAL_VALUES = {
-  [FNames.MonthlyPayment]: 'N(30000)',
-  [FNames.TermInMonths]: '12',
+  // расчеты основных полей
+  [FNames.AverageIncome]: 'N(150000)',
+  [FNames.TermInMonths]: 'N(60)',
+  [FNames.RepaymentPercentage]: `N(10)`,
   [FNames.PaymentType]: `"${EPayemntType.Differentiated}"`,
   [FNames.IsSalary]: false,
   [FNames.IsInsuredInBank]: false,
+  [FNames.Rate]: `${PNames.BaseRate}`,
+
+  // доп. рассчеты
+  [ANames.YearlyRateCoefficient]: `${FNames.Rate} / 100`,
+  [ANames.MonthlyRateCoefficient]: `${ANames.YearlyRateCoefficient} / 12`,
+  [ANames.RepaymentSum]: `${FNames.AverageIncome} * (${FNames.RepaymentPercentage} / 100)`,
+
+  [FNames.Amount]: (
+    `${ANames.RepaymentSum} * (${FNames.TermInMonths} / (1 + (${
+      ANames.YearlyRateCoefficient} * ${FNames.TermInMonths} * 31) / ${DAYS_IN_YEAR}))`
+  ),
 };

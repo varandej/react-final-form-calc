@@ -1,5 +1,7 @@
 import * as React from 'react';
-import { Button, Form, Grid } from 'semantic-ui-react';
+import {
+  Button, Divider, Form, Grid,
+} from 'semantic-ui-react';
 import { omit } from 'lodash/fp';
 import { Form as FinalForm, FormRenderProps } from 'react-final-form';
 import {
@@ -74,6 +76,7 @@ export const FinalFormCalculatorController = React.memo<TProps>(
 
     return (
       <FinalForm
+        key={JSON.stringify(initialValues)}
         decorators={decorators}
         initialValues={initialValues}
         onSubmit={handleSubmit}
@@ -88,19 +91,27 @@ export const FinalFormCalculatorController = React.memo<TProps>(
                       (
                         {
                           name,
+                          placeholder,
                           width,
                           ...rest
                         }: TFinalFormCalculatorFieldsConfigItem,
+                        i: number,
                       ) => (
                         <Grid.Column
-                          key={name}
+                          key={name || `placeholder_${i}`}
                           textAlign="left"
                           width={width}
                          >
-                          <FinalFormCalculatorField
-                            {...rest}
-                            name={name}
-                          />
+                           {
+                             placeholder
+                              ? <Divider hidden />
+                              : (
+                                <FinalFormCalculatorField
+                                {...rest}
+                                name={name}
+                              />
+                              )
+                           }
                         </Grid.Column>
                       ),
                     )
@@ -110,7 +121,7 @@ export const FinalFormCalculatorController = React.memo<TProps>(
                 <Grid.Row>
                   <Grid.Column
                     floated="right"
-                    width={4}
+                    width={2}
                   >
                     <Button
                       {...FF_CALC_BTNS_CONFIG.RESET}

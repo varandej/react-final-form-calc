@@ -1,6 +1,6 @@
 import { pipe } from 'fp-ts/lib/function';
 import {
-  curryN, join, invert, isNumber, map, round, split,
+  join, invert, map, round, split,
 } from 'lodash/fp';
 import { evalMathExpression } from '../../lib/math-js';
 import {
@@ -38,10 +38,11 @@ export const percentsFormatter = (value: string = '0'): string => `${Number(valu
 
 /**
  * Ф-я создающая обработчик изменения поля ФФ калькулятора
- * @param {Record<string, string>} config 
+ * @param {Record<string, string>} config
+ * @param {}
  * @returns {TFinalFormCalculatorValues}
  */
-export const createUpdates = (config: Record<string, string>) => (
+export const createUpdates = (config: Record<string, string>, externalScope?: Record<string, any>) => (
   value: any,
   changedFieldName: string,
   allValues: TFinalFormCalculatorValues | undefined = {},
@@ -57,6 +58,7 @@ export const createUpdates = (config: Record<string, string>) => (
         [cur]: evalMathExpression(
           config[cur],
           {
+            ...externalScope,
             ...allValues,
             ...acc,
           },
@@ -115,7 +117,7 @@ const createErrorText = (
   split(' '),
   map(
     (word: string) => (
-      (!!INVERTED_FIELDS_ENUM[word] && isNumber(values[word]))
+      !!INVERTED_FIELDS_ENUM[word]
         ? round(values[word])
         : word
     ),
@@ -126,44 +128,41 @@ const createErrorText = (
 /**
  * Возвращает функцию рекорд-лвл валидации для формы калькулятора
  */
-export const createFinalFormRecordLvlValidator = curryN(
-  2,
-  (
-    // TValidationConfig - reduce не хочет видеть enum в качестве значения
-    config: Record<string, TValidateConfigItem[]>,
-    values: TFinalFormCalculatorValues,
-  ) => (
-    Object
-      .keys(config)
-      .reduce(
-        (
-          acc: Record<string, string>,
-          cur: string,
-        ) => {
-          // прогоняем значения формы по конфигам, ищем упавшее выражение
-          const failedItem = config[cur]?.find(
-            ({ expression }: TValidateConfigItem) => (
-              evalMathExpression(
-                expression,
-                values,
-                {
-                  fieldName: cur,
-                  trigger: VALIDATION_TRIGGER_NAME,
-                },
-              )
-            ),
-          );
+export const createFinalFormRecordLvlValidator = (
+  config: Record<string, TValidateConfigItem[]>,
+) => (
+  values: TFinalFormCalculatorValues,
+) => (
+  Object
+    .keys(config)
+    .reduce(
+      (
+        acc: Record<string, string>,
+        cur: string,
+      ) => {
+        // прогоняем значения формы по конфигам, ищем упавшее выражение
+        const failedItem = config[cur]?.find(
+          ({ expression }: TValidateConfigItem) => (
+            evalMathExpression(
+              expression,
+              values,
+              {
+                fieldName: cur,
+                trigger: VALIDATION_TRIGGER_NAME,
+              },
+            )
+          ),
+        );
 
-          return (
-            !!failedItem
-              ? {
-                ...acc,
-                [cur]: createErrorText(failedItem.error, values),
-              }
-              : acc
-          );
-        },
-        {},
-      )
-  ),
+        return (
+          !!failedItem
+            ? {
+              ...acc,
+              [cur]: createErrorText(failedItem.error, values),
+            }
+            : acc
+        );
+      },
+      {},
+    )
 );

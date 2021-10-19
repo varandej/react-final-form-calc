@@ -15,7 +15,7 @@ export const FinalFormCalculatorReadonlyValuePresenter = ({ propName, value }: T
   <Grid columns={1}>
     <Grid.Row>
       <Grid.Column>
-        <b>{(propName ? value?.[propName] : value) || PLACEHOLDER}</b>
+        {(propName ? value?.[propName] : value) || PLACEHOLDER}
       </Grid.Column>
     </Grid.Row>
   </Grid>

@@ -1,4 +1,5 @@
 import * as React from 'react';
+import Logo from './assets/logo.png';
 import 'semantic-ui-css/semantic.min.css'
 import {
   CheckboxProps, Divider, Grid, Header, Image, Radio, Segment,
@@ -10,19 +11,18 @@ import {
   OfferList,
   TProduct,
 } from './modules';
-import reactLogoPath from './assets/react-logo.svg';
-import ffLogoPath from './assets/ff-logo.png';
 import './app.css';
 
-const MAIN_TITLE = 'FF Calculator';
 const CALC_TYPE_TO_RADIO_LABEL_MAP = {
-  [ECalcTypes.LoanByIncome]: 'ПК по доходу',
-  [ECalcTypes.LoanBySum]: 'ПК по сумме кредита',
-  [ECalcTypes.Primitive]: 'ПК простейший',
+  [ECalcTypes.LoanByIncome]: 'ПК (по доходу)',
+  [ECalcTypes.LoanBySum]: 'ПК (по сумме кредита)',
+  [ECalcTypes.Primitive]: 'ПК (простейший)',
+  [ECalcTypes.Mortgage]: 'Ипотека',
 };
 const CALC_TYPE_TO_PRODUCT_LIST_AVAILABILITY_MAP = {
   [ECalcTypes.LoanByIncome]: true,
   [ECalcTypes.LoanBySum]: false,
+  [ECalcTypes.Mortgage]: true,
   [ECalcTypes.Primitive]: false,
 };
 
@@ -40,60 +40,46 @@ export const App = () => {
    * @returns {void}
    */
   const handleRadioChange = (_: any, { value }: CheckboxProps): void => {
+    setProduct(null);
     setCalcType(value as ECalcTypes);
   };
 
   return (
     <div className="app">
       <div className="wrapper">
-        <Segment
-          attached="top"
-          color="yellow"
-        >
-          <Header
-            as="h1"
-            color="yellow"
-          >
-            <Image
-              size="huge"
-              src={reactLogoPath}
-            />
-
-            <Image
-              size="small"
-              src={ffLogoPath}
-            />
-
-            <Header.Content>
-              {MAIN_TITLE}
-            </Header.Content>
-          </Header>
-        </Segment>
-      
-        <Segment attached>
-          <Grid divided>
+          <Grid>
             <Grid.Row>
               <Grid.Column width={12}>
                 {
                   CALC_TYPE_TO_PRODUCT_LIST_AVAILABILITY_MAP[selectedCalcType] && (
-                    <>
-                      <OfferList
-                        selectedProductId={selectedProduct?.id}
-                        onSelectCallBack={setProduct}
-                      />
-
-                      <Divider hidden />
-                    </>
+                    <OfferList
+                      selectedProductId={selectedProduct?.id}
+                      onSelectCallBack={setProduct}
+                    />
                   )
                 }
 
-                <FinalFormCalculator
-                  externalValues={{ product: selectedProduct }}
-                  {...FF_CALC_CONFIGS[selectedCalcType]}
-                />
+                <Segment
+                  attached
+                  color={CALC_TYPE_TO_PRODUCT_LIST_AVAILABILITY_MAP[selectedCalcType] ? 'green' : undefined}
+                >
+                  <Header
+                    icon='rub'
+                    as="h2"
+                    content="Калькулятор"
+                  />
+                </Segment>
+
+                <Segment attached>
+                  <FinalFormCalculator
+                    externalValues={{ product: selectedProduct }}
+                    {...FF_CALC_CONFIGS[selectedCalcType]}
+                  />
+                </Segment>
               </Grid.Column>
 
               <Grid.Column
+                verticalAlign="middle"
                 textAlign="left"
                 width={4}
               >
@@ -113,10 +99,12 @@ export const App = () => {
                       )
                     )
                 }
+
+                <Divider hidden />
+                <Image src={Logo} />
               </Grid.Column>
             </Grid.Row>
           </Grid>
-        </Segment>
       </div>
     </div>
   );

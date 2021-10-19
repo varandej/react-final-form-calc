@@ -1,6 +1,21 @@
 import * as math from 'mathjs';
-import { ceil, isEqual } from 'lodash';
+import { ceil, get, isEqual } from 'lodash';
 import { TFuncToReassignMapItem } from './math-ts-types';
+
+/**
+ * Каррированный get
+ * @param {Record<string, any>} obj
+ * @param {any[]} args 
+ * @returns 
+ */
+const curriedGet = (obj: Record<string, any>, ...args: any[]) => get(obj, args);
+
+/**
+ * Возвращает ф-ю передающую все входящие аргументы как единый массив
+ * @param {Function} func
+ * @returns {Function}
+ */
+const transferArgs = (func: Function): Function => (...args: any[]) => func(args);
 
 /**
  * Объект конфига для форматтера mathjs
@@ -13,9 +28,10 @@ import { TFuncToReassignMapItem } from './math-ts-types';
  export const FUNC_TO_REASSIGN_MAP: Record<string, TFuncToReassignMapItem> = {
    add: { func: math.add, withFormat: true },
    divide: { func: math.divide, withFormat: true },
+   get: { func: curriedGet, withFormat: false },
    isEq: { func: isEqual, withFormat: false },
-   max: { func: math.max, withFormat: true },
-   min: { func: math.min, withFormat: true },
+   max: { func: transferArgs(math.max), withFormat: true },
+   min: { func: transferArgs(math.min), withFormat: true },
    multiply: { func: math.multiply, withFormat: true },
    pow: { func: math.pow, withFormat: true },
    roundUp: { func: ceil, withFormat: true },

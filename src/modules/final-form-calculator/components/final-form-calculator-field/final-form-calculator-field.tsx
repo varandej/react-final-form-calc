@@ -14,7 +14,7 @@ export const FinalFormCalculatorField = (
     control,
     format,
     hidden,
-    name,
+    name = '',
     ...rest
   }: TProps,
 ) => (
@@ -56,10 +56,11 @@ export const FinalFormCalculatorField = (
               <Form.Field
                 {...input}
                 {...rest}
-                onChange={onChange}
+                checked={input.value}
                 className="calc-field"
                 control={control || Input}
                 error={meta.error}
+                onChange={onChange}
               />
             )
         );

@@ -5,16 +5,16 @@ import { EPayemntType } from './final-form-calculator-enums';
 export const FF_CALC_BTNS_CONFIG: Record<string, ButtonProps> = {
   RESET: {
     basic: true,
-    color: 'yellow',
-    content: 'Сброс',
+    color: 'green',
     fluid: true,
     icon: 'undo',
     type: 'button',
   },
   SUBMIT: {
-    color: 'yellow',
-    content: 'Поехали!',
+    color: 'green',
+    content: 'Следить',
     fluid: true,
+    icon: 'spy',
     type: 'submit',
   },
 };
